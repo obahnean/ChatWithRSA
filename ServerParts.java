@@ -1,33 +1,37 @@
 import javax.swing.*;
-import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class ServerMenu extends EchoServer4 {
-    private JPanel jpanel;
-    public Menu menuBar;
-    private EchoServer4 server;
+public class ServerParts {
 
-    public ServerMenu()
-    {
-        menuBar = new Menu();
-        jpanel = new JPanel();
-        server = new EchoServer4();
+    public static void setFileMenu(JMenu file){
+        JMenuItem aboutItem = new JMenuItem("About");
+        file.add(aboutItem);
+        aboutItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(null,"To do",
+                        "About" ,JOptionPane.PLAIN_MESSAGE);
+            }
+        });
 
-        jpanel.add(server, BorderLayout.NORTH);
+        JMenuItem helpItem = new JMenuItem("Help");
+        file.add(helpItem);
+        helpItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e){
+                JOptionPane.showMessageDialog(null,"To do",
+                        "Help", JOptionPane.PLAIN_MESSAGE);
+            }
+        });
+
+        JMenuItem exitItem = new JMenuItem("Exit");
+        file.add(exitItem);
+        exitItem.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent event) {
+                        System.exit(0);
+                    }
+                }
+        );
+
     }
-
-    public void createFrameMenu()
-    {
-        JFrame f = new JFrame("Server");
-        f.add(jpanel);
-        f.pack();
-        f.setSize(400,400);
-        f.setVisible(true);
-        f.setDefaultCloseOperation(EXIT_ON_CLOSE);
-    }
-
-    public Menu returnMenu()
-    {
-        return menuBar;
-    }
-
 }
