@@ -1,9 +1,11 @@
-import com.sun.org.apache.xpath.internal.SourceTree;
+//import com.sun.org.apache.xpath.internal.SourceTree;
 
 import java.net.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashMap;
+import java.util.Random;
 import java.util.Vector;
 import javax.swing.*;
 
@@ -31,6 +33,7 @@ public class EchoClient extends JFrame implements ActionListener
     int blockingSize = 2;
 
     JTextField name;
+    int name_length_restricted_to = 12;
    // private Vector<String> listOfClientNames;
     DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
     //private JComboBox<String> listOfClient;
@@ -43,7 +46,15 @@ public class EchoClient extends JFrame implements ActionListener
     Socket echoSocket;
     PrintWriter out;
     BufferedReader in;
+
+    //RSA encrypt and decrypt
     primeNumbers PrimeClass = new primeNumbers();
+    //public key (n ,e)
+    int n =0;
+    int e =0;
+    //private key(d, n)
+    long d =0;
+    Random rand = new Random();
 
 
 
@@ -98,6 +109,7 @@ public class EchoClient extends JFrame implements ActionListener
 
         connectButton = new JButton( "Connect to Server" );
         connectButton.addActionListener( this );
+        connectButton.setEnabled(false);
 
         message = new JTextField ("");
         message.addActionListener( this );
@@ -194,6 +206,7 @@ public class EchoClient extends JFrame implements ActionListener
 
         }
     }
+    //===============================================================enter prime numbers action
     public void enterPrimeFunction(){
         generatePrime.setEnabled(false);
         //get the value of q and p
@@ -215,12 +228,16 @@ public class EchoClient extends JFrame implements ActionListener
         if(numberFlag == 1) {
             if (PrimeClass.isPrime(checkP) && PrimeClass.isPrime(checkQ)) {
                 //check if their p*q is greater than 128^blocking size
-                int n = PrimeClass.getN(checkP, checkQ);
-                if(n <= Math.pow(128, blockingSize)){
+                int enteredN = PrimeClass.getN(checkP, checkQ);
+                if(enteredN <= Math.pow(128, blockingSize)){
                     JOptionPane.showMessageDialog(null,"Please enter larger Prime Numbers");
                 }
                 else{
-                    System.out.println("value for n: " + n);
+                    System.out.println("value for n: " + enteredN);
+                    //now get the public key and priate
+                    n = enteredN;
+                    getPublicKey_getPrivateKey();
+                    connectButton.setEnabled(true);
                 }
             }
             else{
@@ -228,14 +245,97 @@ public class EchoClient extends JFrame implements ActionListener
             }
         }
     }
+    //=====================================================get public key and private key
+    public void getPublicKey_getPrivateKey(){
+        PrimeClass.getPublicKey();
+        PrimeClass.generatePrivateKey();
+        e = PrimeClass.returnE();
+        d = PrimeClass.returnD();
+        System.out.println("e is: " + e);
+        System.out.println("d is: " + d);
+    }
+    //====================================================generate Prime number from a file
+    public HashMap<Integer, String> storePrimeFromFile(){
+        File file = new File("file.txt");
+        HashMap<Integer, String> chooseNumberFromFileMap = new HashMap<>();
+        int mapKey = 0;
+        String fromFile = "";
+        BufferedReader readFromFile = null;
+        try{
+            readFromFile = new BufferedReader(new FileReader(file));
+            String text = "";
+            while( (text = readFromFile.readLine())!= null){
+                chooseNumberFromFileMap.put(mapKey, text);
+                mapKey+=1;
+            }
+        }
+        catch(FileNotFoundException e){
+            e.printStackTrace();
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally{
+            try{
+                if(readFromFile != null){
+                    readFromFile.close();
+                }
+            }catch(IOException e){
+                System.out.println("Failed to close the file");
+            }
+        }
+        return chooseNumberFromFileMap;
+    }
+    //====================================================================select prime # from file
+    public int selectAPrimeNumberFromMap(HashMap<Integer, String> map){
+        int mapSizeFromFile = map.size();
+        int mapKey = rand.nextInt(mapSizeFromFile);
+        String pFromFile =  map.get(mapKey);
+        int prime_from_file = Integer.parseInt(pFromFile);
+        return prime_from_file;
+    }
+    //-----------------------------------------------------generate prime action
     public void generatePrimeFunction(){
         enterPrime.setEnabled(false);
         userInputP.setEnabled(false);
         userInputq.setEnabled(false);
+        int valid_flag = 1;
+
         //select 2 prime number from a file
+        HashMap<Integer, String > primeMap = storePrimeFromFile();
+        int mapSizeFromFile = primeMap.size();
+
+        int p_from_file = selectAPrimeNumberFromMap(primeMap);
+        int q_from_file = selectAPrimeNumberFromMap(primeMap);
+
+        //check if these 2 values are larger than 128^blockingsize
+        n = PrimeClass.getN(p_from_file, q_from_file);
+        int check_if_the_file_contains_valid_numbers = 0;
+        while(n <= Math.pow(128, blockingSize)){
+            //select 2 prime numbers from map randomly
+            p_from_file = selectAPrimeNumberFromMap(primeMap);
+            q_from_file = selectAPrimeNumberFromMap(primeMap);
+            n = PrimeClass.getN(p_from_file, q_from_file);
+            check_if_the_file_contains_valid_numbers+=1;
+
+            if(check_if_the_file_contains_valid_numbers == (Math.pow(mapSizeFromFile, mapSizeFromFile))){
+                System.out.println("Please use larger prime numbers");
+                valid_flag = 0;
+                break;
+            }
+        }
+        // get public key n,e  private key d, n
+        if(valid_flag == 1){
+            getPublicKey_getPrivateKey();
+        }
+        System.out.println("p from file is: " + p_from_file);
+        System.out.println("q from file is: " + q_from_file);
+        System.out.println("n is: " + n);
+
+        generatePrime.setEnabled(false);
+        connectButton.setEnabled(true);
+
 
     }
-
+    //========================================================================send message
     public void doSendMessage()
     {
         try
@@ -257,7 +357,7 @@ public class EchoClient extends JFrame implements ActionListener
             history.insert ("Error in processing message ", 0);
         }
     }
-
+    //==========================================================================make connection
     public void doManageConnection()
     {
         if (connected == false)
@@ -265,27 +365,44 @@ public class EchoClient extends JFrame implements ActionListener
             String machineName = null;
             int portNum = -1;
             try {
-                machineName = machineInfo.getText();
-                portNum = Integer.parseInt(portInfo.getText());
-                echoSocket = new Socket(machineName, portNum );
-                out = new PrintWriter(echoSocket.getOutputStream(), true);
-                in = new BufferedReader(new InputStreamReader(
-                        echoSocket.getInputStream()));
 
                 //send the name out to the server
                 String userName = name.getText();
-                System.out.println(userName);
-                //send out the new user name to the server
-                out.println("addUserName:" + userName);
+                if(userName.length() > name_length_restricted_to)
+                {
+                    JOptionPane.showMessageDialog(null, "Please enter a shorter name");
+                }
+                else{
+                    machineName = machineInfo.getText();
+                    portNum = Integer.parseInt(portInfo.getText());
+                    echoSocket = new Socket(machineName, portNum );
+                    out = new PrintWriter(echoSocket.getOutputStream(), true);
+                    in = new BufferedReader(new InputStreamReader(
+                            echoSocket.getInputStream()));
 
-                // start a new thread to read from the socket
-                new CommunicationReadThread (in, this);
 
-                sendButton.setEnabled(true);
-                connected = true;
-                connectButton.setText("Disconnect from Server");
-                //set username not editable
-                name.setEnabled(false);
+                    System.out.println(userName);
+                    //send out the new user name to the server
+                    //AND Public key
+                    //todo
+                    out.println("addUserName:" + userName);
+
+                    //generate public and private key
+                   /* PrimeClass.getPublicKey();
+                    PrimeClass.generatePrivateKey();*/
+                    /*System.out.println("d is: " + PrimeClass.returnD());
+                    System.out.println("e is: " + PrimeClass.returnE());
+                    System.out.println("n is: " + PrimeClass.returnN());*/
+
+                    // start a new thread to read from the socket
+                    new CommunicationReadThread(in, this);
+
+                    sendButton.setEnabled(true);
+                    connected = true;
+                    connectButton.setText("Disconnect from Server");
+                    //set username not editable
+                    name.setEnabled(false);
+                }
 
             } catch (NumberFormatException e) {
                 history.insert ( "Server Port must be an integer\n", 0);
@@ -295,7 +412,6 @@ public class EchoClient extends JFrame implements ActionListener
                 history.insert ("Couldn't get I/O for "
                         + "the connection to: " + machineName , 0);
             }
-
         }
         else
         {
@@ -319,10 +435,7 @@ public class EchoClient extends JFrame implements ActionListener
                 history.insert ("Error in closing down Socket ", 0);
             }
         }
-
-
     }
-
 } // end class EchoServer3
 
 // Class to handle socket reads
@@ -341,7 +454,6 @@ class CommunicationReadThread extends Thread
         gui = ec3;
         start();
         gui.history.insert ("Starting Communicating\n", 0);
-
     }
 
     public void run()
@@ -379,7 +491,6 @@ class CommunicationReadThread extends Thread
                     //String target_msg[] = content.split("//:");
                     gui.history.insert(content + "\n", 0);
                 }
-
 
 
                 if(inputLine.contains("NameNotUniqueAlert:")){

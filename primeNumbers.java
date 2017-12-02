@@ -8,7 +8,7 @@ public class primeNumbers {
     private int e = 0;
     Random rand = new Random();
     private int k = 0;
-    private int d = 0 ;
+    private long d = 0 ;
 
     public primeNumbers(){
 
@@ -88,6 +88,8 @@ public class primeNumbers {
         }
         System.out.println("k is: "+k);
         d = (k*phi+1)/ e;
+        System.out.println("e is: " + e);
+        System.out.println("phi is: " + phi);
         System.out.println("count is: "+ count);
         System.out.println("d is " + d);
     }
@@ -98,8 +100,10 @@ public class primeNumbers {
     public int returnN(){
         return n;
     }
-    public int returnD(){
+    public long returnD(){
         return d;
     }
+    //=================================================
+
 
 }
