@@ -104,9 +104,6 @@ public class EchoServer4 extends JFrame {
         application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
     }
 
-    private void setMenu(){
-
-    }
 
     // handle button event
     public void doButton( ActionEvent event )
@@ -114,6 +111,7 @@ public class EchoServer4 extends JFrame {
         if (running == false)
         {
             new ConnectionThread (this);
+            running = true;
         }
         else
         {
@@ -123,7 +121,11 @@ public class EchoServer4 extends JFrame {
             System.out.println("End of Connection");
             running = false;
             //remove all in the combo list
+            String a = model.getElementAt(0).toString();
             model.removeAllElements();
+            model.addElement(a);
+            //close the server
+
         }
     }
 
@@ -252,12 +254,19 @@ class CommunicationThread extends Thread
 
                 //----------------------------------------central server add a user
                 if(inputLine.contains("addUserName:")){
+
                     String userName  = inputLine.substring(inputLine.indexOf(":")+1);
-                    gui.model.addElement(userName);
-                    nameList.add(userName);
-                    removeClientWhenExit.put(out, userName);
-                 //   System.out.println("out is what? " + out);
-                    addRemoveFlag = 1;
+                    if(nameList.contains(userName)){
+                        //---------------check if the user name is unique or not
+                        out.println("NameNotUniqueAlert:name is already used");
+                    }
+                    else {
+                        gui.model.addElement(userName);
+                        nameList.add(userName);
+                        removeClientWhenExit.put(out, userName);
+                        //   System.out.println("out is what? " + out);
+                        addRemoveFlag = 1;//=>update new client to all existing clients
+                    }
 
                 }
                 //----------------------------------------central server remove a user
@@ -278,18 +287,17 @@ class CommunicationThread extends Thread
                 if(inputLine.contains("sendMessage:")){
                     String content = inputLine.substring(inputLine.indexOf(":")+1);
                     String target_msg[] = content.split("//:");
-                    String targetClient = target_msg[0];
+                    /*for(int i=0;i<target_msg.length;i++){
+                        System.out.println(target_msg[i]);
+                    }*/
+
+                    String fromClient = target_msg[0];
+                    String targetClient = target_msg[1];
                     int targetIndex = nameList.indexOf(targetClient);
-                    System.out.println(targetIndex);
 
-                    inputLine = "getMessage:"; //and from who
-
-                    inputLine+= target_msg[1];
+                    inputLine = "getMessage:" + "From " + fromClient + ": " + target_msg[2]; //and from who
                     PrintWriter targetOut = outStreamList.get(targetIndex);
-
-
                     targetOut.println(inputLine);
-
                 }
                 //==============================================================================
                 //central server Loop through the outStreamList and send to all "active" streams
@@ -309,7 +317,6 @@ class CommunicationThread extends Thread
                 }
                 //======================================================send message to target client
 
-
                 if (inputLine.equals("Bye."))
                     break;
 
@@ -323,7 +330,7 @@ class CommunicationThread extends Thread
             nameList.remove(removeNameAfterUserClickExit);
             gui.model.removeElement(removeNameAfterUserClickExit);*/
 
-            //System.out.println("close the socket");
+            System.out.println("close the socket?");
             outStreamList.remove(out);
            // gui.outStreamList.remove(out);
 
@@ -340,9 +347,15 @@ class CommunicationThread extends Thread
             //System.exit(1);
         }
         finally{
-            System.out.println("close the socket");
+
             try {
                 clientSocket.close();
+                System.out.println("close the socket at the end");
+                //remove the name fro the list
+               /* String removeNameAfterUserClickExit = gui.removeClient.get(out);
+                nameList.remove(removeNameAfterUserClickExit);
+                gui.model.removeElement(removeNameAfterUserClickExit);*/
+
             }
             catch(IOException e){
                 System.out.println("error on closing the clientSocket");

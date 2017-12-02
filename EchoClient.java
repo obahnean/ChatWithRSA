@@ -7,6 +7,10 @@ import java.awt.event.*;
 import java.util.Vector;
 import javax.swing.*;
 
+
+/*
+name of each client must be unique
+ */
 public class EchoClient extends JFrame implements ActionListener
 {
     // GUI items
@@ -17,7 +21,16 @@ public class EchoClient extends JFrame implements ActionListener
     JTextField message;
     JTextArea history;
 
-    private JTextField name;
+
+    JButton enterPrime;
+    JButton generatePrime;
+
+    JTextField userInputP;
+    JTextField userInputq;
+
+    int blockingSize = 2;
+
+    JTextField name;
    // private Vector<String> listOfClientNames;
     DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
     //private JComboBox<String> listOfClient;
@@ -30,6 +43,10 @@ public class EchoClient extends JFrame implements ActionListener
     Socket echoSocket;
     PrintWriter out;
     BufferedReader in;
+    primeNumbers PrimeClass = new primeNumbers();
+
+
+
 
     // set up GUIp
     public EchoClient()
@@ -41,7 +58,7 @@ public class EchoClient extends JFrame implements ActionListener
 
         // set up the North panel
         upperPanel = new JPanel ();
-        upperPanel.setLayout (new GridLayout (5,2));
+        upperPanel.setLayout (new GridLayout (10,2));
         container.add (upperPanel, BorderLayout.NORTH);
 
         // create buttons
@@ -59,35 +76,57 @@ public class EchoClient extends JFrame implements ActionListener
     } // end CountDown constructor
     public void setUpperPanel(){
 
-        upperPanel.add ( new JLabel ("Server Address: ", JLabel.RIGHT) );
+
         machineInfo = new JTextField ("127.0.0.1");
-        upperPanel.add( machineInfo );
-        upperPanel.add ( new JLabel ("Server Port: ", JLabel.RIGHT) );
+
         portInfo = new JTextField ("");
-        upperPanel.add( portInfo );
+
+
+
+        //prime numbers
+        enterPrime = new JButton("Enter Your Primes");
+        enterPrime.addActionListener(this);
+        generatePrime = new JButton("or Generate Primes Randomly");
+        generatePrime.addActionListener(this);
+
+
+        userInputP = new JTextField("p");
+        userInputq = new JTextField("q");
+
 
         name = new JTextField("Name");
-        upperPanel.add(name);
 
         connectButton = new JButton( "Connect to Server" );
         connectButton.addActionListener( this );
-        upperPanel.add( connectButton );
 
-        upperPanel.add ( new JLabel ("Message: ", JLabel.RIGHT) );
         message = new JTextField ("");
         message.addActionListener( this );
-        upperPanel.add( message );
+
 
         sendButton = new JButton( "Send Message" );
         sendButton.addActionListener( this );
         sendButton.setEnabled (false);
-        upperPanel.add( sendButton );
 
-        //listOfClientNames = new Vector<>();
-        //listOfClientNames.add("");
-        //listOfClient = new JComboBox<>(new Vector<>(listOfClientNames));
+
         listOfClient = new JComboBox(comboModel);
 
+        //---------------------------port
+        upperPanel.add ( new JLabel ("Server Address: ", JLabel.RIGHT) );
+        upperPanel.add( machineInfo );
+        upperPanel.add ( new JLabel ("Server Port: ", JLabel.RIGHT) );
+        upperPanel.add( portInfo );
+        //---------------------------primes
+        upperPanel.add(enterPrime);
+        upperPanel.add(generatePrime);
+        upperPanel.add(userInputP);
+        upperPanel.add(userInputq);
+
+
+        upperPanel.add(name);
+        upperPanel.add( connectButton );
+        upperPanel.add ( new JLabel ("Message: ", JLabel.RIGHT) );
+        upperPanel.add( message );
+        upperPanel.add( sendButton );
         upperPanel.add(listOfClient);
 
 
@@ -97,7 +136,41 @@ public class EchoClient extends JFrame implements ActionListener
     public static void main( String args[] )
     {
         EchoClient application = new EchoClient();
-        application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+        //when close, remove the client list
+        //application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+        application.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
+        application.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        application.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                if (JOptionPane.showConfirmDialog(application,
+                        "Are you sure to close this window?", "Confirmation",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+                    //remove the client when exit
+                    String userName = application.name.getText();
+                    System.out.println(userName);
+
+                    //send out the disconnect user name to the server
+                    if(application.connected == true) {
+                        application.out.println("removeUserName:" + userName);
+                        application.out.close();
+
+                        try {
+                            application.in.close();
+                        } catch (IOException e) {
+                            System.out.println("error on closing in");
+                        }
+                        try {
+                            application.echoSocket.close();
+                        } catch (IOException e2) {
+                            System.out.println("error on closing down the socket");
+                        }
+                    }
+                    System.exit(0);
+                }
+            }
+        });
     }
 
     // handle button event
@@ -113,6 +186,54 @@ public class EchoClient extends JFrame implements ActionListener
         {
             doManageConnection();
         }
+        else if(event.getSource() == enterPrime){
+            enterPrimeFunction();
+        }
+        else if(event.getSource() == generatePrime){
+            generatePrimeFunction();
+
+        }
+    }
+    public void enterPrimeFunction(){
+        generatePrime.setEnabled(false);
+        //get the value of q and p
+        //check if they are prime, then check if they are greater than blocking size
+        String p = userInputP.getText().toString();
+        String q = userInputq.getText().toString();
+        int checkP = 0;
+        int checkQ = 0;
+        int numberFlag = 0;
+        try {
+            checkP = Integer.parseInt(p);
+            checkQ = Integer.parseInt(q);
+            numberFlag = 1;
+
+        }
+        catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(null,"Please enter Prime Numbers for p and q");
+        }
+        if(numberFlag == 1) {
+            if (PrimeClass.isPrime(checkP) && PrimeClass.isPrime(checkQ)) {
+                //check if their p*q is greater than 128^blocking size
+                int n = PrimeClass.getN(checkP, checkQ);
+                if(n <= Math.pow(128, blockingSize)){
+                    JOptionPane.showMessageDialog(null,"Please enter larger Prime Numbers");
+                }
+                else{
+                    System.out.println("value for n: " + n);
+                }
+            }
+            else{
+                JOptionPane.showMessageDialog(null,"Please enter Prime Numbers");
+            }
+        }
+    }
+    public void generatePrimeFunction(){
+        enterPrime.setEnabled(false);
+        userInputP.setEnabled(false);
+        userInputq.setEnabled(false);
+        //select 2 prime number from a file
+
     }
 
     public void doSendMessage()
@@ -121,10 +242,11 @@ public class EchoClient extends JFrame implements ActionListener
         {
 
             String sendMessageToClient = "sendMessage:";
+            String fromWho = name.getText();
             String targetClient = comboModel.getSelectedItem().toString();
             String getMessage = message.getText();
 
-            sendMessageToClient = sendMessageToClient + targetClient + "//:" + getMessage;
+            sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + getMessage;
 
             out.println(sendMessageToClient);
             //history.insert ("From Server: " + in.readLine() + "\n" , 0);
@@ -179,13 +301,11 @@ public class EchoClient extends JFrame implements ActionListener
         {
             try
             {
-
                 String userName = name.getText();
                 System.out.println(userName);
+
                 //send out the disconnect user name to the server
                 out.println("removeUserName:" + userName);
-
-
                 out.close();
                 in.close();
                 echoSocket.close();
@@ -262,8 +382,16 @@ class CommunicationReadThread extends Thread
 
 
 
-                if(inputLine.equals("NameNotUniqueAlert")){
-                    gui.history.insert("Please choose another name",0);
+                if(inputLine.contains("NameNotUniqueAlert:")){
+                    String content = inputLine.substring(inputLine.indexOf(":") + 1);
+                    gui.history.insert("Please choose another name: "+ content+"\n",0);
+                    gui.sendButton.setEnabled(false);
+                    gui.connectButton.setText("C");
+
+                    gui.echoSocket.close();
+                    gui.connected = false;
+                    gui.connectButton.setText("Connect to Server");
+                    gui.name.setEnabled(true);
 
                     break;
                 }
@@ -272,7 +400,7 @@ class CommunicationReadThread extends Thread
                     break;
 
             }
-
+            System.out.println("in closed?");
             in.close();
             //clientSocket.close();
         }
