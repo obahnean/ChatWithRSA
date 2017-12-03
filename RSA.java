@@ -1,174 +1,79 @@
-
-
-/*
-RSA algorithm in cryptography
-the public key consists of 2 numbers
-1: multiplication of 2 prime numbers: max 28 bits (int 2^27)for this project
-2: an int, not  a factor of n
- */
-
-import java.util.HashMap;
+import java.math.BigInteger;
 import java.util.Random;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.random;
+public class RSA{
+    private BigInteger p;
+    private BigInteger q;
+    private BigInteger n;
+    private BigInteger phi;
+    private BigInteger e;
+    private BigInteger d;
+    private int bitlength = 1024;
+    private Random r;
 
-public class RSA {
-    //generate public key
-    HashMap<Integer, Integer>primeMap = new HashMap<>();
-    Random rand = new Random();
-    int maxPrime;
-    int mapSize;
-    int p = 0;
-    int q = 0;
-    int n = 0;
-    int e = 0;
-    int phi = 0;
-    int d =0;
-    int k=0;
-
-
-    public RSA(int maxPrime){
-        this.maxPrime = maxPrime;
-        storePrimes();
-        mapSize = primeMap.size();
-    }
-
-    public static void main(String[] args) {
-        RSA public_private_keys = new RSA(1000);
-       // public_private_keys.printPrimes();
-        public_private_keys.generatePublicKey();
-    }
-
-    public void getPrimeNumber(){
-        // n  has to be larger than 127
-       //from the stored prime numbers, get 2 prime numbers randomly
-       //
-        //mapsize => max exclusive
-        n = 0;
-        while( n <= 127) {
-            int randomKey = rand.nextInt(mapSize);
-            int randomKey2 = rand.nextInt(mapSize);
-
-            p = primeMap.get(randomKey);
-            q = primeMap.get(randomKey2);
-            //n is the part 1 of public key
-            System.out.println("p is "+ p);
-            System.out.println("q is " + q);
-            n = p * q;
-            System.out.println("n is: " + n);
-        }
-        //second number e: must be integer, not a factor of n, and
-
+    public RSA(){
 
     }
-    public void getPublicKeyE(){
-        //Random rand = new Random();
-        /*Calculate/Select e
-        must be an integer
-        must be "relatively-prime" with phi
-        realatively_prime: if the only positive integer (factor) that divides both of them is 1*/
 
-        //1 < e< (prime1 -1)*(prime2-1)
-        phi = (p-1)*(q-1);
-        System.out.println("phi is: "+ phi);
-        //lower bound inclusive
-        //upper bound exclusive
-        //must be in range 1 < e < phi
-       // e  = rand.nextInt(phi)+2;
-        //choose a prime number, then
-        //if( phi % e != 0) => e is valid
-        int randomEKey = rand.nextInt(mapSize);
-
-
-        int val = primeMap.get(randomEKey);
-
-        while(val >  phi || (val ==p) || (val ==q)){
-            randomEKey = rand.nextInt(mapSize);
-
-            val = primeMap.get(randomEKey);
-            System.out.println("val for random e is: " + val);
-
-        }
-        e = val;
-        System.out.println("e is " + e);
+    public void getPublicPrivateKey(BigInteger inputP, BigInteger inputQ){
+        p = inputP;
+        q = inputQ;
+        n = p.multiply(q);
+        phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+        getE();
+        d = e.modInverse(phi);
     }
-    //=================================================prime numbers
-    public void storePrimes(){
-        //maxPrime has to be positive
-        maxPrime = abs(maxPrime);
-        int key = 0;
-        for(int i = 2; i< maxPrime; i++){
-            if( i == 2 || i == 3 || i == 5 || i==7){
-                primeMap.put(key,i);
-                key++;
-                continue;
+
+    public int check_n_is_large_than_blocking_pack(int a, int b){
+        return a*b;
+
+    }
+    public void getE(){
+        e = BigInteger.valueOf(2);
+        while(e.compareTo(phi) < 0){
+            System.out.println(e);
+            if(phi.gcd(e).compareTo(BigInteger.ONE) == 0){
+                break;
             }
-            if(i %2 == 0 || i%3 ==0 || i %5 == 0 || i%7 == 0){
-                //not a prime number, then go to next round
-                continue;
-            }
-            if(isPrime(i)){
-                primeMap.put(key, i);
-                key++;
-            }
+            e = e.add(BigInteger.ONE);
         }
     }
-    public void printPrimes(){
-        int numsPerLine = 0;
-        for(Integer key : primeMap.keySet()){
-            System.out.print(primeMap.get(key) + " ");
-            numsPerLine++;
-            if(numsPerLine % 10 == 0){
-                System.out.println();
-            }
-        }
+    public BigInteger returnE(){
+        return e;
     }
-    public boolean isPrime(int num){
-        for(int i = 2;i<num;i++){
-            if(num % i == 0){
-               return false;
+    public boolean isPrime(int num) {
+        for (int i = 2; i < num; i++) {
+            if (num % i == 0) {
+                return false;
             }
         }
         return true;
     }
-    //============================================public key
-    public void generatePublicKey(){
-        getPrimeNumber();
-        getPublicKeyE();
-        //getD_and_k();
-    }
-    //==============================================private key
-    public void generatePrivateKey(){
-        getD_and_k();
 
-    }
-    public void getD_and_k(){
-      /*Determine/Select dm
-                d = (k*phi + 1) / e for some integer k
-        where e must divide (k*phi + 1) evenly
-                ((k*phi + 1) must be a multiple of e)*/
-        k = rand.nextInt(phi);
+    // Encrypt message
+    public byte[] encrypt(byte[] message)
+    {
 
-        int count =0;
-        while( (k*phi+1)% e != 0){
-            k = rand.nextInt(phi);
-            count +=1;
+        return (new BigInteger(message)).modPow(e, n).toByteArray();
+    }
+
+    // Decrypt message
+    public byte[] decrypt(byte[] message)
+    {
+
+        return (new BigInteger(message)).modPow(d, n).toByteArray();
+    }
+    public String bytesToString(byte[] encrypted)
+    {
+        String message = "";
+        for (byte b : encrypted)
+        {
+            message += Byte.toString(b);
         }
-        System.out.println("k is: "+k);
-        d = (k*phi+1)/ e;
-        System.out.println("count is: "+ count);
-        System.out.println("d is " + d);
+        return message;
+    }
 
 
-    }
-    //================================================Encrypt
-    public void encryptMessage(String Message){
-        //Encrypt Message M :   M^e % n  ===> M'
-    }
-    public void decryptMessage(String Message){
-        //Decrypt M'        :   M'^d % n ===> M
-    }
 
 
 

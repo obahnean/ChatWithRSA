@@ -1,8 +1,10 @@
 
+import java.math.BigInteger;
 import java.net.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
@@ -47,7 +49,8 @@ public class EchoClient extends JFrame implements ActionListener
     BufferedReader in;
 
     //RSA encrypt and decrypt
-    primeNumbers PrimeClass = new primeNumbers();
+   // primeNumbers PrimeClass = new primeNumbers();
+    RSA rsaClass = new RSA();
     //public key (n ,e)
     int n =0;
     int e =0;
@@ -227,9 +230,10 @@ public class EchoClient extends JFrame implements ActionListener
             JOptionPane.showMessageDialog(null,"Please enter Prime Numbers for p and q");
         }
         if(numberFlag == 1) {
-            if (PrimeClass.isPrime(checkP) && PrimeClass.isPrime(checkQ)) {
+            if (rsaClass.isPrime(checkP) && rsaClass.isPrime(checkQ)) {
                 //check if their p*q is greater than 128^blocking size
-                int enteredN = PrimeClass.getN(checkP, checkQ);
+
+                int enteredN = rsaClass.check_n_is_large_than_blocking_pack(checkP, checkQ);
                 if(enteredN <= Math.pow(128, blockingSize)){
                     JOptionPane.showMessageDialog(null,"Please enter larger Prime Numbers");
                 }
@@ -237,7 +241,11 @@ public class EchoClient extends JFrame implements ActionListener
                     System.out.println("value for n: " + enteredN);
                     //now get the public key and priate
                     n = enteredN;
-                    getPublicKey_getPrivateKey();
+                  //  getPublicKey_getPrivateKey();
+                    BigInteger pp = BigInteger.valueOf(checkP);
+                    BigInteger qq = BigInteger.valueOf(checkP);
+                    rsaClass.getPublicPrivateKey(pp, qq);
+                    e = rsaClass.returnE().intValue();
                     connectButton.setEnabled(true);
                 }
             }
@@ -247,12 +255,12 @@ public class EchoClient extends JFrame implements ActionListener
         }
     }
     //=====================================================get public key and private key
-    public void getPublicKey_getPrivateKey(){
+   /* public void getPublicKey_getPrivateKey(){
         PrimeClass.getPublicKey();
         PrimeClass.generatePrivateKey();
         e = PrimeClass.returnE();
         d = PrimeClass.returnD();
-    }
+    }*/
     //====================================================generate Prime number from a file
     public HashMap<Integer, String> storePrimeFromFile(){
         File file = new File("file.txt");
@@ -286,7 +294,7 @@ public class EchoClient extends JFrame implements ActionListener
     //====================================================================select prime # from file
     public int selectAPrimeNumberFromMap(HashMap<Integer, String> map){
         int mapSizeFromFile = map.size();
-        int mapKey = rand.nextInt(mapSizeFromFile);
+        int mapKey = rand.nextInt(mapSizeFromFile-1);
         String pFromFile =  map.get(mapKey);
         int prime_from_file = Integer.parseInt(pFromFile);
         return prime_from_file;
@@ -306,13 +314,14 @@ public class EchoClient extends JFrame implements ActionListener
         int q_from_file = selectAPrimeNumberFromMap(primeMap);
 
         //check if these 2 values are larger than 128^blockingsize
-        n = PrimeClass.getN(p_from_file, q_from_file);
+        n = rsaClass.check_n_is_large_than_blocking_pack(p_from_file, q_from_file);
+
         int check_if_the_file_contains_valid_numbers = 0;
         while(n <= Math.pow(128, blockingSize)){
             //select 2 prime numbers from map randomly
             p_from_file = selectAPrimeNumberFromMap(primeMap);
             q_from_file = selectAPrimeNumberFromMap(primeMap);
-            n = PrimeClass.getN(p_from_file, q_from_file);
+            n = rsaClass.check_n_is_large_than_blocking_pack(p_from_file, q_from_file);
             check_if_the_file_contains_valid_numbers+=1;
 
             if(check_if_the_file_contains_valid_numbers == (Math.pow(mapSizeFromFile, mapSizeFromFile))){
@@ -325,8 +334,13 @@ public class EchoClient extends JFrame implements ActionListener
         if(valid_flag == 1){
             userInputP.setText(String.valueOf(p_from_file));
             userInputq.setText(String.valueOf(q_from_file));
-            getPublicKey_getPrivateKey();
+           // getPublicKey_getPrivateKey();
+            BigInteger pp_file = BigInteger.valueOf(p_from_file);
+            BigInteger qq_file = BigInteger.valueOf(q_from_file);
+            rsaClass.getPublicPrivateKey(pp_file, qq_file);
+            e = rsaClass.returnE().intValue();
         }
+
         System.out.println("p from file is: " + p_from_file);
         System.out.println("q from file is: " + q_from_file);
         System.out.println("n is: " + n);
@@ -341,14 +355,25 @@ public class EchoClient extends JFrame implements ActionListener
     {
         try
         {
-
             String sendMessageToClient = "sendMessage:";
             String fromWho = name.getText();
             String targetClient = comboModel.getSelectedItem().toString();
             String getMessage = message.getText();
 
-            sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + getMessage;
+           // sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + getMessage;
 
+            byte[] encrypted = rsaClass.encrypt(getMessage.getBytes());
+            String sendEncrypted = Base64.getEncoder().encodeToString(encrypted);
+           // String sendEncrypted = rsaClass.bytesToString(encrypted);
+
+            sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + sendEncrypted;
+
+            byte[] decrypted = rsaClass.decrypt(encrypted);
+           String decryptedMessage = new String(decrypted);
+            System.out.println(decryptedMessage);
+
+            out.println(sendMessageToClient);
+            //history.insert ("From Server: " + in.readLine() + "\n" , 0);
 
             //todo
             //-------------------------------------------
@@ -358,34 +383,34 @@ public class EchoClient extends JFrame implements ActionListener
             int indexFrom = targetClient.indexOf("(");
             int indexTo = targetClient.indexOf(")");
             String targetClientPublicKey = targetClient.substring(indexFrom+1,indexTo);
-            System.out.println("target client public key is: " + targetClientPublicKey);
+         //   System.out.println("target client public key is: " + targetClientPublicKey);
             String keyValues[] = targetClientPublicKey.split(",");
             targetN = Integer.parseInt(keyValues[0]);
             targetE = Integer.parseInt(keyValues[1]);
-            System.out.println("target n is: " + targetN);
-            System.out.println("target e is: " + targetE);
-            char[] encryptMessage = getMessage.toCharArray();
+           // System.out.println("target n is: " + targetN);
+           // System.out.println("target e is: " + targetE);
+          /*  char[] encryptMessage = getMessage.toCharArray();
             //if the length of msg is not even, pad null at the end
             String encrptedNumber = "";
             double M= 0.0;
             for(int i=0;i<encryptMessage.length;i++){
-                System.out.println("encrypt message:" + encryptMessage[i]);
+             //   System.out.println("encrypt message:" + encryptMessage[i]);
                 int toAscii = (int)encryptMessage[i];
-                System.out.println("ascii: "   + toAscii);
+            //    System.out.println("ascii: "   + toAscii);
                 double encryptNum = toAscii*(Math.pow(128,i));
                 M+=encryptNum;
             }
-            System.out.println("encrypt message:" + M);
+          //  System.out.println("encrypt message:" + M);
             double sendEncryptNum = (Math.pow(M, e)) % n;
-            System.out.println("send encrypt num is: " + sendEncryptNum);
+            System.out.println("send c is: " + sendEncryptNum);
+
 
             //split
             // the message every two characters
 
-
+            sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + sendEncryptNum;*/
             //----------------------------------------------------------
-            out.println(sendMessageToClient);
-            //history.insert ("From Server: " + in.readLine() + "\n" , 0);
+
 
         }
         catch (Exception e)
@@ -530,14 +555,19 @@ class CommunicationReadThread extends Thread
                 //handle getMessage here + from who:
                 if(inputLine.contains("getMessage:")) {
                     String content = inputLine.substring(inputLine.indexOf(":") + 1);
-                    //String target_msg[] = content.split("//:");
+                    String target_msg[] = content.split("//:");
                     //todo
                     //use private key to decrypt the message
                     //M = c^d %n
-                    //double message = Math.pow(, gui.d) % gui.n;
+                    String decryptM = target_msg[0].split(": ")[1];
+                   // byte [] decryptMbyte = (decryptM);
+                    byte[] decode = Base64.getDecoder().decode(decryptM);
+                    byte[] decrypted = gui.rsaClass.decrypt(decode);
+                    String decryptedMessage = new String(decrypted);
 
 
-                    gui.history.insert(content + "\n", 0);
+
+                    gui.history.insert(decryptedMessage + "\n", 0);
                 }
 
 

@@ -42,28 +42,30 @@ public class primeNumbers {
         //if( phi % e != 0) => e is valid
         //lower bound inclusive
         //upper bound exclusive
-        e = rand.nextInt(phi) + 2 ;
-       // finalCheckRelativePrime(e, phi);
-        while(phi % e == 0 || finalCheckRelativePrime(e, phi) == false ){
-            e = rand.nextInt(phi) + 2 ;
+        //if e is too small, then the value for d will be too big,
+        for(int i =2;i<phi;i++){
+            if( (gcd(i,phi) == 1)){
+                e = i;
+                break;
+            }
         }
         return e;
     }
-    //https://stackoverflow.com/questions/28575416/finding-out-if-two-numbers-are-relatively-prime
-    public int checkRelativePrime(int a, int b){
-        int t;
-        while(b != 0){
-            t = a;
-            a = b;
-            b = t%b;
+    //====================================
+    //used gcd function from: http://www.geeksforgeeks.org/rsa-algorithm-cryptography/
+    int gcd(int a, int h)
+    {
+        int temp;
+        while (true)
+        {
+            temp = a%h;
+            if (temp == 0)
+                return h;
+            a = h;
+            h = temp;
         }
-        //if a is 1, then they are co-prime
-        return a;
-
     }
-    public boolean finalCheckRelativePrime(int a, int b){
-        return checkRelativePrime(a, b) == 1;
-    }
+    //===================================
     public void getPublicKey(){
         //public key is n and e
         getPhi();//=>for generating e
@@ -79,17 +81,18 @@ public class primeNumbers {
                 d = (k*phi + 1) / e for some integer k
         where e must divide (k*phi + 1) evenly
                 ((k*phi + 1) must be a multiple of e)*/
-        k = rand.nextInt(phi);
-        int count =0;
-        while( (((double)k*(double)phi+1)% (double)e) != 0){
-            k = rand.nextInt(phi);
-            count +=1;
+
+        for(int i=2;i<phi;i++){
+            if((i*(double)phi+1)%e == 0){
+                k = i;
+                break;
+            }
         }
        // System.out.println("count is: "+ count);
         double kandphi = (double)k*(double)phi +1;
         d = (kandphi)/ (double)e;
-       // System.out.println("k is: "+k);
-       // System.out.println("phi is: " + phi);
+        System.out.println("k is: "+k);
+        //System.out.println("phi is: " + phi);
        // System.out.println("k and phi is: " + kandphi);
         System.out.println("e is: " + e);
         System.out.println("d is " + (int)d);
