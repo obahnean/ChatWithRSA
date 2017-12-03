@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-//import com.sun.org.apache.xpath.internal.SourceTree;
 
-=======
->>>>>>> 57d551555aead255761220bb05d01e184ea1cc37
 import java.net.*;
 import java.io.*;
 import java.awt.*;
@@ -56,7 +52,7 @@ public class EchoClient extends JFrame implements ActionListener
     int n =0;
     int e =0;
     //private key(d, n)
-    long d =0;
+    double d =0;
     Random rand = new Random();
 
 
@@ -168,7 +164,9 @@ public class EchoClient extends JFrame implements ActionListener
 
                     //send out the disconnect user name to the server
                     if(application.connected == true) {
-                        application.out.println("removeUserName:" + userName);
+
+                        String sendPublicKey = "(" + application.n + "," + application.e + ")";
+                        application.out.println("removeUserName:" + userName + sendPublicKey);
                         application.out.close();
 
                         try {
@@ -254,8 +252,6 @@ public class EchoClient extends JFrame implements ActionListener
         PrimeClass.generatePrivateKey();
         e = PrimeClass.returnE();
         d = PrimeClass.returnD();
-        System.out.println("e is: " + e);
-        System.out.println("d is: " + d);
     }
     //====================================================generate Prime number from a file
     public HashMap<Integer, String> storePrimeFromFile(){
@@ -327,6 +323,8 @@ public class EchoClient extends JFrame implements ActionListener
         }
         // get public key n,e  private key d, n
         if(valid_flag == 1){
+            userInputP.setText(String.valueOf(p_from_file));
+            userInputq.setText(String.valueOf(q_from_file));
             getPublicKey_getPrivateKey();
         }
         System.out.println("p from file is: " + p_from_file);
@@ -351,6 +349,41 @@ public class EchoClient extends JFrame implements ActionListener
 
             sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + getMessage;
 
+
+            //todo
+            //-------------------------------------------
+            //send the encrypt the message
+            double targetN =0;
+            double targetE =0;
+            int indexFrom = targetClient.indexOf("(");
+            int indexTo = targetClient.indexOf(")");
+            String targetClientPublicKey = targetClient.substring(indexFrom+1,indexTo);
+            System.out.println("target client public key is: " + targetClientPublicKey);
+            String keyValues[] = targetClientPublicKey.split(",");
+            targetN = Integer.parseInt(keyValues[0]);
+            targetE = Integer.parseInt(keyValues[1]);
+            System.out.println("target n is: " + targetN);
+            System.out.println("target e is: " + targetE);
+            char[] encryptMessage = getMessage.toCharArray();
+            //if the length of msg is not even, pad null at the end
+            String encrptedNumber = "";
+            double M= 0.0;
+            for(int i=0;i<encryptMessage.length;i++){
+                System.out.println("encrypt message:" + encryptMessage[i]);
+                int toAscii = (int)encryptMessage[i];
+                System.out.println("ascii: "   + toAscii);
+                double encryptNum = toAscii*(Math.pow(128,i));
+                M+=encryptNum;
+            }
+            System.out.println("encrypt message:" + M);
+            double sendEncryptNum = (Math.pow(M, e)) % n;
+            System.out.println("send encrypt num is: " + sendEncryptNum);
+
+            //split
+            // the message every two characters
+
+
+            //----------------------------------------------------------
             out.println(sendMessageToClient);
             //history.insert ("From Server: " + in.readLine() + "\n" , 0);
 
@@ -387,15 +420,11 @@ public class EchoClient extends JFrame implements ActionListener
                     System.out.println(userName);
                     //send out the new user name to the server
                     //AND Public key
-                    //todo
-                    out.println("addUserName:" + userName);
+                    String sendPublicKey = "(" + n + "," + e + ")";
 
-                    //generate public and private key
-                   /* PrimeClass.getPublicKey();
-                    PrimeClass.generatePrivateKey();*/
-                    /*System.out.println("d is: " + PrimeClass.returnD());
-                    System.out.println("e is: " + PrimeClass.returnE());
-                    System.out.println("n is: " + PrimeClass.returnN());*/
+                    out.println("addUserName:" + userName + sendPublicKey);
+
+
 
                     // start a new thread to read from the socket
                     new CommunicationReadThread(in, this);
@@ -424,7 +453,9 @@ public class EchoClient extends JFrame implements ActionListener
                 System.out.println(userName);
 
                 //send out the disconnect user name to the server
-                out.println("removeUserName:" + userName);
+
+                String sendPublicKey = "(" + n + "," + e + ")";
+                out.println("removeUserName:" + userName + sendPublicKey);
                 out.close();
                 in.close();
                 echoSocket.close();
@@ -432,6 +463,14 @@ public class EchoClient extends JFrame implements ActionListener
                 connected = false;
                 connectButton.setText("Connect to Server");
                 name.setEnabled(true);
+
+                //regenerate prime numbers
+                enterPrime.setEnabled(true);
+                userInputP.setEnabled(true);
+                userInputq.setEnabled(true);
+                generatePrime.setEnabled(true);
+                connectButton.setEnabled(false);
+
             }
             catch (IOException e)
             {
@@ -443,7 +482,7 @@ public class EchoClient extends JFrame implements ActionListener
 
 // Class to handle socket reads
 //   THis class is NOT written as a nested class, but perhaps it should
-//==========================================================communication thread
+//=======================================================================communication thread
 class CommunicationReadThread extends Thread
 {
     //private Socket clientSocket;
@@ -492,6 +531,12 @@ class CommunicationReadThread extends Thread
                 if(inputLine.contains("getMessage:")) {
                     String content = inputLine.substring(inputLine.indexOf(":") + 1);
                     //String target_msg[] = content.split("//:");
+                    //todo
+                    //use private key to decrypt the message
+                    //M = c^d %n
+                    //double message = Math.pow(, gui.d) % gui.n;
+
+
                     gui.history.insert(content + "\n", 0);
                 }
 

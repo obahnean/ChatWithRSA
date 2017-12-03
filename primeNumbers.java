@@ -8,7 +8,7 @@ public class primeNumbers {
     private int e = 0;
     Random rand = new Random();
     private int k = 0;
-    private long d = 0 ;
+    private double d = 0 ;
 
     public primeNumbers(){
 
@@ -80,18 +80,19 @@ public class primeNumbers {
         where e must divide (k*phi + 1) evenly
                 ((k*phi + 1) must be a multiple of e)*/
         k = rand.nextInt(phi);
-
         int count =0;
-        while( (k*phi+1)% e != 0){
+        while( (((double)k*(double)phi+1)% (double)e) != 0){
             k = rand.nextInt(phi);
             count +=1;
         }
-        System.out.println("k is: "+k);
-        d = (k*phi+1)/ e;
+       // System.out.println("count is: "+ count);
+        double kandphi = (double)k*(double)phi +1;
+        d = (kandphi)/ (double)e;
+       // System.out.println("k is: "+k);
+       // System.out.println("phi is: " + phi);
+       // System.out.println("k and phi is: " + kandphi);
         System.out.println("e is: " + e);
-        System.out.println("phi is: " + phi);
-        System.out.println("count is: "+ count);
-        System.out.println("d is " + d);
+        System.out.println("d is " + (int)d);
     }
     //--------------------need to call generate public and private key first
     public int returnE(){
@@ -100,8 +101,8 @@ public class primeNumbers {
     public int returnN(){
         return n;
     }
-    public long returnD(){
-        return d;
+    public int returnD(){
+        return (int)d;
     }
     //=================================================
 

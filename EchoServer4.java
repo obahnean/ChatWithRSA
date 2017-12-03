@@ -23,6 +23,7 @@ public class EchoServer4 extends JFrame {
     ServerSocket serverSocket;
     Vector <PrintWriter> outStreamList;
     Vector<String>nameListVector;
+    Vector<String>nameForCheckingDuplicate;
 
     //If multiple threads access a hash map concurrently,
     // and at least one of the threads modifies the map structurally,
@@ -45,6 +46,7 @@ public class EchoServer4 extends JFrame {
         // set up the shared outStreamList
         outStreamList = new Vector<PrintWriter>();
         nameListVector = new Vector<String>();
+        nameForCheckingDuplicate = new Vector<String>();
 
         // get content pane and set its layout
         Container container = getContentPane();
@@ -157,7 +159,7 @@ class ConnectionThread extends Thread
                 {
                     System.out.println ("Waiting for Connection");
                     gui.ssButton.setText("Stop Listening");
-                    new CommunicationThread (gui.serverSocket.accept(), gui, gui.outStreamList, gui.nameListVector,gui.removeClient);
+                    new CommunicationThread (gui.serverSocket.accept(), gui, gui.outStreamList, gui.nameListVector,gui.removeClient,gui.nameForCheckingDuplicate);
                 }
             }
             catch (IOException e)
@@ -196,11 +198,13 @@ class CommunicationThread extends Thread
     private Map<PrintWriter, String> removeClientWhenExit;
     private int numOfClient =0;
     private int addRemoveFlag = 0;
+    private Vector<String> nameCheckDuplicate;
 
 
 
     public CommunicationThread (Socket clientSoc, EchoServer4 ec3,
-                                Vector<PrintWriter> oSL, Vector<String> names, Map<PrintWriter,String> removeClient )
+                                Vector<PrintWriter> oSL, Vector<String> names,
+                                Map<PrintWriter,String> removeClient, Vector<String>nameCheck )
     {
         clientSocket = clientSoc;
         gui = ec3;
@@ -208,7 +212,8 @@ class CommunicationThread extends Thread
         nameList = names;
         removeClientWhenExit = removeClient;
 
-        gui.history.insert ("Comminucating with Port" + clientSocket.getLocalPort()+"\n", 0);
+        nameCheckDuplicate = nameCheck;
+        //gui.history.insert ("Communicating with Port" + clientSocket.getLocalPort()+"\n", 0);
 
         start();
     }
@@ -249,21 +254,27 @@ class CommunicationThread extends Thread
             {
                 System.out.println ("Server: " + inputLine);
                 //server gui insert
-                gui.history.insert (inputLine+"\n", 0);
+
                 //check message type
 
                 //----------------------------------------central server add a user
                 if(inputLine.contains("addUserName:")){
+                    //user name + public key
+                    String userName_and_publicKey  = inputLine.substring(inputLine.indexOf(":")+1);
+                    int getUserNameIndex = userName_and_publicKey.indexOf("(");
+                    String userName = userName_and_publicKey.substring(0,getUserNameIndex);
 
-                    String userName  = inputLine.substring(inputLine.indexOf(":")+1);
-                    if(nameList.contains(userName)){
+                    //need another list for username
+                    if(nameCheckDuplicate.contains(userName)){
                         //---------------check if the user name is unique or not
                         out.println("NameNotUniqueAlert:name is already used");
                     }
                     else {
-                        gui.model.addElement(userName);
-                        nameList.add(userName);
-                        removeClientWhenExit.put(out, userName);
+                        gui.history.insert (inputLine+"\n", 0);
+                        gui.model.addElement(userName_and_publicKey);
+                        nameList.add(userName_and_publicKey);
+                        removeClientWhenExit.put(out, userName_and_publicKey);
+                        nameCheckDuplicate.add(userName);
                         //   System.out.println("out is what? " + out);
                         addRemoveFlag = 1;//=>update new client to all existing clients
                     }
@@ -271,9 +282,15 @@ class CommunicationThread extends Thread
                 }
                 //----------------------------------------central server remove a user
                 if(inputLine.contains("removeUserName:")){
+                    gui.history.insert (inputLine+"\n", 0);
                     String userName  = inputLine.substring(inputLine.indexOf(":")+1);
-                    gui.model.removeElement(userName);
+                    gui.model.removeElement(userName);//=>user name with public key
                     nameList.remove(userName);
+                    int getUserNameIndex = userName.indexOf("(");
+                    String removeuserName = userName.substring(0,getUserNameIndex);
+                    nameCheckDuplicate.remove(removeuserName);
+
+
                     addRemoveFlag = 1;
 
                     //close the socket
@@ -285,11 +302,16 @@ class CommunicationThread extends Thread
                 }
                 //========================================forward message to a specific client
                 if(inputLine.contains("sendMessage:")){
+                    gui.history.insert (inputLine+"\n", 0);
                     String content = inputLine.substring(inputLine.indexOf(":")+1);
                     String target_msg[] = content.split("//:");
                     /*for(int i=0;i<target_msg.length;i++){
                         System.out.println(target_msg[i]);
                     }*/
+
+                    //todo
+                    //get the public key from the target client, and encrypt the message
+
 
                     String fromClient = target_msg[0];
                     String targetClient = target_msg[1];
