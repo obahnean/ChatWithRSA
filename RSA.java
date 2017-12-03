@@ -1,4 +1,5 @@
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class RSA{
@@ -8,7 +9,7 @@ public class RSA{
     private BigInteger phi;
     private BigInteger e;
     private BigInteger d;
-    private int bitlength = 1024;
+ //   private int bitlength = 1024;
     private Random r;
 
     public RSA(){
@@ -31,7 +32,6 @@ public class RSA{
     public void getE(){
         e = BigInteger.valueOf(2);
         while(e.compareTo(phi) < 0){
-            System.out.println(e);
             if(phi.gcd(e).compareTo(BigInteger.ONE) == 0){
                 break;
             }
@@ -51,16 +51,24 @@ public class RSA{
     }
 
     // Encrypt message
-    public byte[] encrypt(byte[] message)
+    public byte[] encrypt(byte[] message, BigInteger targetE, BigInteger targetN)
     {
+       // System.out.println("when encrypt e: " + targetE);
+      //  System.out.println("when encrypt n: " + targetN);
+        return (new BigInteger(message)).modPow(targetE, targetN).toByteArray();
+    }
+    public byte[] encrypttest(byte[] message)
+    {
+       // System.out.println("when encrypt e: " + e);
+       // System.out.println("when encrypt n: " + n);
 
         return (new BigInteger(message)).modPow(e, n).toByteArray();
     }
-
     // Decrypt message
     public byte[] decrypt(byte[] message)
     {
-
+       // System.out.println("when decryt d is:" + d);
+       // System.out.println("wehn decrpt n is:" + n);
         return (new BigInteger(message)).modPow(d, n).toByteArray();
     }
     public String bytesToString(byte[] encrypted)

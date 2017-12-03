@@ -28,10 +28,10 @@ public class EchoServer4 extends JFrame {
     //If multiple threads access a hash map concurrently,
     // and at least one of the threads modifies the map structurally,
     // it must be synchronized externally.
-    Map<PrintWriter,String> removeClient = Collections.synchronizedMap(new HashMap<>());
-
-
-    DefaultListModel model = new DefaultListModel();
+   // Map<PrintWriter,String> removeClient = Collections.synchronizedMap(new HashMap<>());
+    Map<PrintWriter,String> removeClient;
+    DefaultListModel model;
+   // DefaultListModel model = new DefaultListModel();
     JList list;
 
     // set up GUI
@@ -47,6 +47,8 @@ public class EchoServer4 extends JFrame {
         outStreamList = new Vector<PrintWriter>();
         nameListVector = new Vector<String>();
         nameForCheckingDuplicate = new Vector<String>();
+        removeClient = Collections.synchronizedMap(new HashMap<>());
+        model = new DefaultListModel();
 
         // get content pane and set its layout
         Container container = getContentPane();
