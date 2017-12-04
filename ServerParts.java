@@ -1,3 +1,10 @@
+/*
+ * CS342_PROJECT5: Networked Chat with RSA Encryption/Decryption
+ * 
+ * Muna Bist - mbist3
+ * Queena Zhang - qzhang85
+ * Ovidiu Bahnean - obahne2 
+ */
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,9 +30,9 @@ public class ServerParts {
         infoItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.showMessageDialog(null,"<html><h1> Team Members</h1>"
-                		+ "Queena Zhang\r\n"
-                		+ "Ovidiu Bahnean\r\n"
-                		+ "Muna Bist\r\n",
+                		+ "Queena Zhang\t-qzhang85\r\n"
+                		+ "Ovidiu Bahnean\t-obahne2\r\n"
+                		+ "Muna Bist\t-mbist3\r\n",
                         "Info" ,JOptionPane.PLAIN_MESSAGE);
                 
             }
