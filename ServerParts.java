@@ -9,8 +9,25 @@ public class ServerParts {
         file.add(aboutItem);
         aboutItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null,"To do",
+                JOptionPane.showMessageDialog(null,"<html><h1> Networked Chat</h1>"
+                		+ "This is a chat program with RSA Encryption/Decryption\r\n"
+                		+ "Multiple clients are allowed to connect to a Central Server\r\n"
+                		+ "and they can send the encrypted message over the secure server\r\n",
                         "About" ,JOptionPane.PLAIN_MESSAGE);
+                
+            }
+        });
+        
+        JMenuItem infoItem = new JMenuItem("Info");
+        file.add(infoItem);
+        infoItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(null,"<html><h1> Team Members</h1>"
+                		+ "Queena Zhang\r\n"
+                		+ "Ovidiu Bahnean\r\n"
+                		+ "Muna Bist\r\n",
+                        "Info" ,JOptionPane.PLAIN_MESSAGE);
+                
             }
         });
 
@@ -18,8 +35,16 @@ public class ServerParts {
         file.add(helpItem);
         helpItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e){
-                JOptionPane.showMessageDialog(null,"To do",
-                        "Help", JOptionPane.PLAIN_MESSAGE);
+                
+                JOptionPane.showMessageDialog(null, "<html><h1> How to Chat?</h1>"
+    					+ "IDE: Intellij\r\n"
+    					+ "Have the file.txt file in the src folder.\r\n"
+    					+ "Text file contains one prime number per line.\r\n"
+    					+ "Choose a unique user name 12 chars max in the Name field. \r\n"
+    					+ "Enter the prime numbers in p and q field.\"miss\".\r\n"
+    					+ "And then connect to the server.\r\n"
+    					+ "Start your chat by sending the messages typed in the message field. \r\n",
+    					"Help", JOptionPane.PLAIN_MESSAGE);
             }
         });
 
@@ -34,4 +59,5 @@ public class ServerParts {
         );
 
     }
-}
+    
+    }
