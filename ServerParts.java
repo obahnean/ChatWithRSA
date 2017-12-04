@@ -41,7 +41,7 @@ public class ServerParts {
     					+ "Have the file.txt file in the src folder.\r\n"
     					+ "Text file contains one prime number per line.\r\n"
     					+ "Choose a unique user name 12 chars max in the Name field. \r\n"
-    					+ "Enter the prime numbers in p and q field.\"miss\".\r\n"
+    					+ "Enter the prime numbers in p and q field.\r\n"
     					+ "And then connect to the server.\r\n"
     					+ "Start your chat by sending the messages typed in the message field. \r\n",
     					"Help", JOptionPane.PLAIN_MESSAGE);
