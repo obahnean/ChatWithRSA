@@ -54,7 +54,7 @@ public class RSA{
     public byte[] encrypt(byte[] message, BigInteger targetE, BigInteger targetN)
     {
        // System.out.println("when encrypt e: " + targetE);
-      //  System.out.println("when encrypt n: " + targetN);
+       // System.out.println("when target encrypt n: " + targetN);
         return (new BigInteger(message)).modPow(targetE, targetN).toByteArray();
     }
     public byte[] encrypttest(byte[] message)
@@ -67,8 +67,8 @@ public class RSA{
     // Decrypt message
     public byte[] decrypt(byte[] message)
     {
-       // System.out.println("when decryt d is:" + d);
-       // System.out.println("wehn decrpt n is:" + n);
+      //  System.out.println("when decryt d is:" + d);
+        //System.out.println("when decrpt n is:" + n);
         return (new BigInteger(message)).modPow(d, n).toByteArray();
     }
     public String bytesToString(byte[] encrypted)

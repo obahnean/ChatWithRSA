@@ -222,8 +222,9 @@ public class EchoClient extends JFrame implements ActionListener
         rsaClass = new RSA();
         //get the value of q and p
         //check if they are prime, then check if they are greater than blocking size
-        String p = userInputP.getText().toString();
-        String q = userInputq.getText().toString();
+        String p = userInputP.getText();
+        String q = userInputq.getText();
+        System.out.println("user input p string: " +userInputP.getText() );
 
         int checkP = 0;
         int checkQ = 0;
@@ -238,25 +239,32 @@ public class EchoClient extends JFrame implements ActionListener
             JOptionPane.showMessageDialog(null,"Please enter Prime Numbers for p and q");
         }
         if(numberFlag == 1) {
-            if (rsaClass.isPrime(checkP) && rsaClass.isPrime(checkQ)) {
+            if ((rsaClass.isPrime(checkP)) && (rsaClass.isPrime(checkQ))) {
                 //check if their p*q is greater than 128^blocking size
 
-                int enteredN = rsaClass.check_n_is_large_than_blocking_pack(checkP, checkQ);
-                if(enteredN <= Math.pow(128, blockingSize)){
+                n = rsaClass.check_n_is_large_than_blocking_pack(checkP, checkQ);
+                if(n <= Math.pow(128, blockingSize)){
                     JOptionPane.showMessageDialog(null,"Please enter larger Prime Numbers");
                 }
                 else{
-                    System.out.println("value for n: " + enteredN);
-                    //now get the public key and private
-                    n = enteredN;
-                  //  getPublicKey_getPrivateKey();
-                    BigInteger pp = BigInteger.valueOf(checkP);
-                    System.out.println("user input p is: " + pp);
 
+                    //now get the public key and private
+
+                  //  System.out.println("value for n: " + n);
+                  //  getPublicKey_getPrivateKey();
+
+                    System.out.println("user input p is: " + checkP);
+                    System.out.println("user input q is: " + checkQ);
+                    //todo check
+                    BigInteger pp = BigInteger.valueOf(checkP);
                     BigInteger qq = BigInteger.valueOf(checkQ);
                     rsaClass.getPublicPrivateKey(pp, qq);
                     e = rsaClass.returnE().intValue();
+
+
                     enterPrime.setEnabled(false);
+                    userInputP.setEnabled(false);
+                    userInputq.setEnabled(false);
                     connectButton.setEnabled(true);
                 }
             }
@@ -425,7 +433,7 @@ public class EchoClient extends JFrame implements ActionListener
             history.insert ("Error in processing message ", 0);
         }
     }
-    //==========================================================================make connection
+    //====================================================================make connection
     public void doManageConnection()
     {
         if (connected == false)
@@ -453,6 +461,7 @@ public class EchoClient extends JFrame implements ActionListener
                     //send out the new user name to the server
                     //AND Public key
                     String sendPublicKey = "(" + n + "," + e + ")";
+                    System.out.println("send with meesage:n " + n);
 
                     out.println("addUserName:" + userName + sendPublicKey);
 
@@ -550,7 +559,7 @@ class CommunicationReadThread extends Thread
                     //clear the model, then add all active clients
                     gui.comboModel.removeAllElements();
                     String[] names= newClient.split("//:");
-                    System.out.println(names.length);
+
                     for(int i =0;i<names.length;i++){
                         System.out.println("newly added client add list: " + names[i]);
                         gui.comboModel.addElement(names[i]);
@@ -563,13 +572,15 @@ class CommunicationReadThread extends Thread
                 if(inputLine.contains("getMessage:")) {
                     String content = inputLine.substring(inputLine.indexOf(":") + 1);
                     String target_msg[] = content.split("//:");
-                    //todo
+
                     //use private key to decrypt the message
                     //M = c^d %n
                     String from_and_decryptM[] = target_msg[0].split(": ");
                     String from = from_and_decryptM[0];
                     String decryptM = from_and_decryptM[1];
                    // byte [] decryptMbyte = (decryptM);
+
+                    System.out.println("receive message: " + gui.n);
 
                     String msgAfterDecrypted = "";
                     String DecodeEveryTwoChar[] = decryptM.split("//\\+");
@@ -583,7 +594,7 @@ class CommunicationReadThread extends Thread
                   //  byte[] decode = Base64.getDecoder().decode(decryptM);
                    // byte[] decrypted = gui.rsaClass.decrypt(decode);
                    // String decryptedMessage = new String(decrypted);
-                    
+
                     gui.history.insert(from+": " +msgAfterDecrypted + "\n", 0);
                 }
 
