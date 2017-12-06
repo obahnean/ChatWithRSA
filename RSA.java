@@ -1,3 +1,10 @@
+/*
+ * CS342_PROJECT5: Networked Chat with RSA Encryption/Decryption
+ * 
+ * Muna Bist - mbist3
+ * Queena Zhang - qzhang85
+ * Ovidiu Bahnean - obahne2 
+ */
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
