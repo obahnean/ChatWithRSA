@@ -1,6 +1,6 @@
 # ChatWithRSA
 
-IDE: Intellij
+
 
 Text File 
 
@@ -9,10 +9,12 @@ Text File
 
 
 
+
 Name of clients:
 1:name of the client can not be more than 12 characters
 2:name has to be unique
 3:public key(n, e)
+
 
 
 Send Message:
