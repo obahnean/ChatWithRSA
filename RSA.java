@@ -16,7 +16,6 @@ public class RSA{
     private BigInteger phi;
     private BigInteger e;
     private BigInteger d;
- //   private int bitlength = 1024;
     private Random r;
 
     public RSA(){
@@ -36,6 +35,11 @@ public class RSA{
         return a*b;
 
     }
+    /*e:
+    not a factor of phi
+    must be "relatively-prime" with phi
+    realatively_prime: if the only positive integer (factor) that divides both of them is 1*/
+    //1 < e< (prime1 -1)*(prime2-1)*/
     public void getE(){
         e = BigInteger.valueOf(2);
         while(e.compareTo(phi) < 0){
@@ -64,13 +68,7 @@ public class RSA{
        // System.out.println("when target encrypt n: " + targetN);
         return (new BigInteger(message)).modPow(targetE, targetN).toByteArray();
     }
-    public byte[] encrypttest(byte[] message)
-    {
-       // System.out.println("when encrypt e: " + e);
-       // System.out.println("when encrypt n: " + n);
 
-        return (new BigInteger(message)).modPow(e, n).toByteArray();
-    }
     // Decrypt message
     public byte[] decrypt(byte[] message)
     {
@@ -78,6 +76,7 @@ public class RSA{
         //System.out.println("when decrpt n is:" + n);
         return (new BigInteger(message)).modPow(d, n).toByteArray();
     }
+    //for checking purpose
     public String bytesToString(byte[] encrypted)
     {
         String message = "";
@@ -87,9 +86,5 @@ public class RSA{
         }
         return message;
     }
-
-
-
-
 
 }

@@ -3,7 +3,8 @@
  * 
  * Muna Bist - mbist3
  * Queena Zhang - qzhang85
- * Ovidiu Bahnean - obahne2 
+ * Ovidiu Bahnean - obahne2
+ *
  */
 import java.math.BigInteger;
 import java.net.*;
@@ -14,12 +15,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.Vector;
 import javax.swing.*;
 
 
 /*
-name of each client must be unique
+name of each client must be unique and shorter than 12 characters
  */
 public class EchoClient extends JFrame implements ActionListener
 {
@@ -39,16 +39,15 @@ public class EchoClient extends JFrame implements ActionListener
     JTextField userInputq;
 
     int blockingSize = 2;
+    int smallest_n = 30000;
 
     JTextField name;
     int name_length_restricted_to = 12;
-   // private Vector<String> listOfClientNames;
-   // DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
-   DefaultComboBoxModel comboModel;
-    //private JComboBox<String> listOfClient;
-    JComboBox listOfClient;
 
+    DefaultComboBoxModel comboModel;
+    JComboBox listOfClient;
     JPanel upperPanel;
+
 
     // Network Items
     boolean connected;
@@ -64,10 +63,7 @@ public class EchoClient extends JFrame implements ActionListener
     int n =0;
     int e =0;
     //private key(d, n)
-    double d =0;
     Random rand = new Random();
-
-
 
 
     // set up GUIp
@@ -87,7 +83,6 @@ public class EchoClient extends JFrame implements ActionListener
 
         // create buttons
         connected = false;
-
         setUpperPanel();
 
         history = new JTextArea ( 10, 40 );
@@ -102,9 +97,7 @@ public class EchoClient extends JFrame implements ActionListener
 
 
         machineInfo = new JTextField ("127.0.0.1");
-
         portInfo = new JTextField ("");
-
 
 
         //prime numbers
@@ -154,14 +147,12 @@ public class EchoClient extends JFrame implements ActionListener
         upperPanel.add( sendButton );
         upperPanel.add(listOfClient);
 
-
-
     }
 
     public static void main( String args[] )
     {
         EchoClient application = new EchoClient();
-        //when close, remove the client list
+        //when a client clicks close, remove the client list
         //application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         application.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
         application.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -218,16 +209,15 @@ public class EchoClient extends JFrame implements ActionListener
         }
         else if(event.getSource() == generatePrime){
             generatePrimeFunction();
-
         }
     }
     //===============================================================enter prime numbers action
     public void enterPrimeFunction(){
         generatePrime.setEnabled(false);
-        //tocheck
+
         rsaClass = new RSA();
         //get the value of q and p
-        //check if they are prime, then check if they are greater than blocking size
+        //check if they are prime, then check if they are greater than certain size
         String p = userInputP.getText();
         String q = userInputq.getText();
         System.out.println("user input p string: " +userInputP.getText() );
@@ -238,7 +228,12 @@ public class EchoClient extends JFrame implements ActionListener
         try {
             checkP = Integer.parseInt(p);
             checkQ = Integer.parseInt(q);
-            numberFlag = 1;
+            if(checkP == checkQ){
+                JOptionPane.showMessageDialog(null,"Please enter different Prime Numbers for p and q");
+            }
+            else {
+                numberFlag = 1;
+            }
 
         }
         catch(NumberFormatException e){
@@ -246,28 +241,20 @@ public class EchoClient extends JFrame implements ActionListener
         }
         if(numberFlag == 1) {
             if ((rsaClass.isPrime(checkP)) && (rsaClass.isPrime(checkQ))) {
-                //check if their p*q is greater than 128^blocking size
+                //check if their p*q is greater than ~30000
 
                 n = rsaClass.check_n_is_large_than_blocking_pack(checkP, checkQ);
-                if(n <= Math.pow(128, blockingSize)){
+
+                if(n < smallest_n)  {
                     JOptionPane.showMessageDialog(null,"Please enter larger Prime Numbers");
                 }
                 else{
-
                     //now get the public key and private
-
-                  //  System.out.println("value for n: " + n);
-                  //  getPublicKey_getPrivateKey();
-
-                    System.out.println("user input p is: " + checkP);
-                    System.out.println("user input q is: " + checkQ);
-                    //todo check
                     BigInteger pp = BigInteger.valueOf(checkP);
                     BigInteger qq = BigInteger.valueOf(checkQ);
                     rsaClass.getPublicPrivateKey(pp, qq);
                     e = rsaClass.returnE().intValue();
-
-
+                    //set buttons unable
                     enterPrime.setEnabled(false);
                     userInputP.setEnabled(false);
                     userInputq.setEnabled(false);
@@ -282,12 +269,13 @@ public class EchoClient extends JFrame implements ActionListener
 
     //====================================================generate Prime number from a file
     public HashMap<Integer, String> storePrimeFromFile(){
-        File file = new File("file.txt");
+        File file = new File("file.txt"); //=>file name
         HashMap<Integer, String> chooseNumberFromFileMap = new HashMap<>();
         int mapKey = 0;
         String fromFile = "";
         BufferedReader readFromFile = null;
         try{
+            //store these numbers in hashmap first, then pick 2 prime numbers later
             readFromFile = new BufferedReader(new FileReader(file));
             String text = "";
             while( (text = readFromFile.readLine())!= null){
@@ -310,19 +298,17 @@ public class EchoClient extends JFrame implements ActionListener
         }
         return chooseNumberFromFileMap;
     }
-    //====================================================================select prime # from file
+    //=================================================================select prime # from file
     public int selectAPrimeNumberFromMap(HashMap<Integer, String> map){
         int mapSizeFromFile = map.size();
         int mapKey = rand.nextInt(mapSizeFromFile-1);
+
         String pFromFile =  map.get(mapKey);
-
         int prime_from_file = Integer.parseInt(pFromFile);
-
         return prime_from_file;
     }
     //-----------------------------------------------------generate prime action
     public void generatePrimeFunction(){
-        //todo
         rsaClass = new RSA();
         enterPrime.setEnabled(false);
         userInputP.setEnabled(false);
@@ -336,17 +322,17 @@ public class EchoClient extends JFrame implements ActionListener
         int p_from_file = selectAPrimeNumberFromMap(primeMap);
         int q_from_file = selectAPrimeNumberFromMap(primeMap);
 
-        //check if these 2 values are larger than 128^blockingsize
+        //check if these 2 values are larger than ~30000
         n = rsaClass.check_n_is_large_than_blocking_pack(p_from_file, q_from_file);
 
         int check_if_the_file_contains_valid_numbers = 0;
-        while(n <= Math.pow(128, blockingSize)){
+        while(n < smallest_n || p_from_file == q_from_file){
             //select 2 prime numbers from map randomly
             p_from_file = selectAPrimeNumberFromMap(primeMap);
             q_from_file = selectAPrimeNumberFromMap(primeMap);
             n = rsaClass.check_n_is_large_than_blocking_pack(p_from_file, q_from_file);
-            check_if_the_file_contains_valid_numbers+=1;
 
+            check_if_the_file_contains_valid_numbers+=1;//check when the file does not have valid prime numbers
             if(check_if_the_file_contains_valid_numbers == (Math.pow(mapSizeFromFile, mapSizeFromFile))){
                 System.out.println("Please use larger prime numbers");
                 valid_flag = 0;
@@ -357,7 +343,7 @@ public class EchoClient extends JFrame implements ActionListener
         if(valid_flag == 1){
             userInputP.setText(String.valueOf(p_from_file));
             userInputq.setText(String.valueOf(q_from_file));
-           // getPublicKey_getPrivateKey();
+            //get public key and private key
             BigInteger pp_file = BigInteger.valueOf(p_from_file);
             BigInteger qq_file = BigInteger.valueOf(q_from_file);
             rsaClass.getPublicPrivateKey(pp_file, qq_file);
@@ -367,13 +353,12 @@ public class EchoClient extends JFrame implements ActionListener
        // System.out.println("p from file is: " + p_from_file);
        // System.out.println("q from file is: " + q_from_file);
        // System.out.println("n is: " + n);
-
         generatePrime.setEnabled(false);
         connectButton.setEnabled(true);
 
 
     }
-    //========================================================================send message
+    //=====================================================================send message
     public void doSendMessage()
     {
         try
@@ -383,7 +368,7 @@ public class EchoClient extends JFrame implements ActionListener
             String targetClient = comboModel.getSelectedItem().toString();
             String getMessage = message.getText();
             //-------------------------------------------
-           // sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + getMessage;
+            //parse data to target client public key n, e
             int indexFrom = targetClient.indexOf("(");
             int indexTo = targetClient.indexOf(")");
             String targetClientPublicKey = targetClient.substring(indexFrom+1,indexTo);
@@ -397,41 +382,30 @@ public class EchoClient extends JFrame implements ActionListener
             //---------------------------------------
             //split into 2 char at a time
             if(getMessage.length() %2 != 0 ){
-                getMessage +=" ";
+                getMessage +=" ";   //padding the character with empty char
             }
             char[] encryptMessageArray = getMessage.toCharArray();
             String sendEncrypted ="";
             int arrayLength =  encryptMessageArray.length;
 
-            //todo
-           // System.out.println(" arraylength is: " + arrayLength);
+
             for (int i = 0; i < arrayLength; i += 2) {
                 String m = "" + encryptMessageArray[i] + encryptMessageArray[i + 1];
-               // System.out.println("m before encrypt is: "+m);
-                //System.out.println("m get byte: " + m.getBytes());
-               byte[] encrypted = rsaClass.encrypt(m.getBytes(), targetE, targetN);
-              //  byte[] encrypted = rsaClass.encrypttest(m.getBytes(StandardCharsets.UTF_8));
-
-
+                //encrypt msg
+                byte[] encrypted = rsaClass.encrypt(m.getBytes(), targetE, targetN);
+                //send encode encrypt messages bytes over
                 sendEncrypted += Base64.getEncoder().encodeToString(encrypted);
                 sendEncrypted += "//+";
 
             }
 
-
             sendMessageToClient = sendMessageToClient + fromWho + "//:" + targetClient + "//:" + sendEncrypted;
-
-             char[] encryptMessage = getMessage.toCharArray();
-            //if the length of msg is not even, pad null at the end
-            String encrptedNumber = "";
-
 
             out.println(sendMessageToClient);
             //history.insert ("From Server: " + in.readLine() + "\n" , 0);
 
 
             //-------------------------------------------
-
 
         }
         catch (Exception e)
@@ -472,7 +446,6 @@ public class EchoClient extends JFrame implements ActionListener
                     out.println("addUserName:" + userName + sendPublicKey);
 
 
-
                     // start a new thread to read from the socket
                     new CommunicationReadThread(in, this);
 
@@ -500,7 +473,6 @@ public class EchoClient extends JFrame implements ActionListener
                 System.out.println(userName);
 
                 //send out the disconnect user name to the server
-
                 String sendPublicKey = "(" + n + "," + e + ")";
                 out.println("removeUserName:" + userName + sendPublicKey);
                 out.close();
@@ -525,7 +497,7 @@ public class EchoClient extends JFrame implements ActionListener
             }
         }
     }
-} // end class EchoServer3
+} // end class
 
 // Class to handle socket reads
 //   THis class is NOT written as a nested class, but perhaps it should
@@ -535,7 +507,6 @@ class CommunicationReadThread extends Thread
     //private Socket clientSocket;
     private EchoClient gui;
     private BufferedReader in;
-
 
     public CommunicationReadThread (BufferedReader inparam, EchoClient ec3)
     {
@@ -556,10 +527,8 @@ class CommunicationReadThread extends Thread
             {
                 System.out.println ("From Server: " + inputLine);
                // gui.history.insert ("From Server: " + inputLine + "\n", 0);
-
                 if(inputLine.contains("addUserName:") || inputLine.contains("removeUserName:")){
                     //then send the new user over to all client
-
                     String newClient  = inputLine.substring(inputLine.indexOf(":")+1);
                     //add to client list
                     //clear the model, then add all active clients
@@ -570,21 +539,19 @@ class CommunicationReadThread extends Thread
                         System.out.println("newly added client add list: " + names[i]);
                         gui.comboModel.addElement(names[i]);
                     }
-
                 }
-
+                //-------------------------------------------------------decrypt the messages
                 //send message is handled in send message button
                 //handle getMessage here + from who:
+
                 if(inputLine.contains("getMessage:")) {
                     String content = inputLine.substring(inputLine.indexOf(":") + 1);
                     String target_msg[] = content.split("//:");
-
                     //use private key to decrypt the message
                     //M = c^d %n
                     String from_and_decryptM[] = target_msg[0].split(": ");
                     String from = from_and_decryptM[0];
                     String decryptM = from_and_decryptM[1];
-                   // byte [] decryptMbyte = (decryptM);
 
                     System.out.println("receive message: " + gui.n);
 
@@ -593,17 +560,13 @@ class CommunicationReadThread extends Thread
                     for(int i=0;i<DecodeEveryTwoChar.length;i++) {
                     //    System.out.println("  char is: " + DecodeEveryTwoChar[i]);
                         byte[] decode = Base64.getDecoder().decode(DecodeEveryTwoChar[i]);
-                        byte[] decrypted = gui.rsaClass.decrypt(decode);
+                        byte[] decrypted = gui.rsaClass.decrypt(decode);//=> see RSA class for decrypt detail
                         String decryptedMessage = new String(decrypted,StandardCharsets.UTF_8);
                         msgAfterDecrypted+=decryptedMessage;
                     }
-                  //  byte[] decode = Base64.getDecoder().decode(decryptM);
-                   // byte[] decrypted = gui.rsaClass.decrypt(decode);
-                   // String decryptedMessage = new String(decrypted);
-
                     gui.history.insert(from+": " +msgAfterDecrypted + "\n", 0);
                 }
-
+                //------------------------------------------------------------------check if the name is unique
                 if(inputLine.contains("NameNotUniqueAlert:")){
                     String content = inputLine.substring(inputLine.indexOf(":") + 1);
                     gui.history.insert("Please choose another name: "+ content+"\n",0);
@@ -614,15 +577,12 @@ class CommunicationReadThread extends Thread
                     gui.connected = false;
                     gui.connectButton.setText("Connect to Server");
                     gui.name.setEnabled(true);
-
                     break;
                 }
-
                 if (inputLine.equals("Bye."))
                     break;
-
             }
-            System.out.println("in closed?");
+           // System.out.println("in closed?");
             in.close();
             //clientSocket.close();
         }
@@ -635,7 +595,6 @@ class CommunicationReadThread extends Thread
             catch(IOException except){
                 System.out.println("close the socket");
             }
-
             System.err.println("Problem with Client Read");
             //System.exit(1);
         }

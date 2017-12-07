@@ -98,11 +98,6 @@ public class primeNumbers {
        // System.out.println("count is: "+ count);
         double kandphi = (double)k*(double)phi +1;
         d = (kandphi)/ (double)e;
-        System.out.println("k is: "+k);
-        //System.out.println("phi is: " + phi);
-       // System.out.println("k and phi is: " + kandphi);
-        System.out.println("e is: " + e);
-        System.out.println("d is " + (int)d);
     }
     //--------------------need to call generate public and private key first
     public int returnE(){

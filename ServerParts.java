@@ -45,7 +45,7 @@ public class ServerParts {
                 
                 JOptionPane.showMessageDialog(null, "<html><h1> How to Chat?</h1>"
     					+ "IDE: Intellij\r\n"
-    					+ "Have the file.txt file in the src folder.\r\n"
+    					+ "Have the file.txt file in the same directory as the src folder.\r\n"
     					+ "Text file contains one prime number per line.\r\n"
     					+ "Choose a unique user name 12 chars max in the Name field. \r\n"
     					+ "Enter the prime numbers in p and q field.\r\n"

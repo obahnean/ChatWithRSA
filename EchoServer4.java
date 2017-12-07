@@ -15,8 +15,6 @@ import java.util.*;
 public class EchoServer4 extends JFrame {
 
     // GUI items
-
-
     JMenu fileMenu;
 
     JButton ssButton;
@@ -35,10 +33,9 @@ public class EchoServer4 extends JFrame {
     //If multiple threads access a hash map concurrently,
     // and at least one of the threads modifies the map structurally,
     // it must be synchronized externally.
-   // Map<PrintWriter,String> removeClient = Collections.synchronizedMap(new HashMap<>());
     Map<PrintWriter,String> removeClient;
     DefaultListModel model;
-   // DefaultListModel model = new DefaultListModel();
+   //list for client names
     JList list;
 
     // set up GUI
@@ -46,9 +43,7 @@ public class EchoServer4 extends JFrame {
     {
         super( "Echo Server" );
 
-
         fileMenu = new JMenu("File");
-
 
         // set up the shared outStreamList
         outStreamList = new Vector<PrintWriter>();
@@ -101,13 +96,10 @@ public class EchoServer4 extends JFrame {
         history.setEditable(false);
         container.add( new JScrollPane(history) );
 
-
-        //container.add(menuBar);
-
         setSize( 500, 450 );
         setVisible( true );
 
-    } // end CountDown constructor
+    }
 
     public static void main( String args[] )
     {
@@ -132,17 +124,15 @@ public class EchoServer4 extends JFrame {
             System.out.println("End of Connection");
             running = false;
             //remove all in the combo list
-            String a = model.getElementAt(0).toString();
+            String a = model.getElementAt(0).toString();//=>client list
             model.removeAllElements();
             model.addElement(a);
             //close the server
-
         }
     }
 
 
 } // end class EchoServer4
-
 
 class ConnectionThread extends Thread
 {
@@ -205,7 +195,6 @@ class CommunicationThread extends Thread
     private Vector<PrintWriter> outStreamList;
     private Vector<String>nameList;
     private Map<PrintWriter, String> removeClientWhenExit;
-    private int numOfClient =0;
     private int addRemoveFlag = 0;
     private Vector<String> nameCheckDuplicate;
 
@@ -314,14 +303,8 @@ class CommunicationThread extends Thread
                     gui.history.insert (inputLine+"\n", 0);
                     String content = inputLine.substring(inputLine.indexOf(":")+1);
                     String target_msg[] = content.split("//:");
-                    /*for(int i=0;i<target_msg.length;i++){
-                        System.out.println(target_msg[i]);
-                    }*/
 
-                    //todo
-                    //get the public key from the target client, and encrypt the message
-
-
+                    //forward the encrypted message to the target client
                     String fromClient = target_msg[0];
                     String targetClient = target_msg[1];
                     int targetIndex = nameList.indexOf(targetClient);
@@ -340,7 +323,6 @@ class CommunicationThread extends Thread
                         if (inputLine.contains("removeUserName:")) {
                             inputLine = removeClient();
                         }
-
                         System.out.println("Sending Message");
                         out1.println(inputLine); //send Messages to clients
                     }
@@ -355,15 +337,8 @@ class CommunicationThread extends Thread
                     gui.serverContinue = false;
             }
 
-            //when client exit
-           // System.out.println("user click X to exit");
-           /* String removeNameAfterUserClickExit = gui.removeClient.get(out);
-            nameList.remove(removeNameAfterUserClickExit);
-            gui.model.removeElement(removeNameAfterUserClickExit);*/
-
-            System.out.println("close the socket?");
+            System.out.println("close the socket");
             outStreamList.remove(out);
-           // gui.outStreamList.remove(out);
 
             out.close();
             in.close();
@@ -382,10 +357,6 @@ class CommunicationThread extends Thread
             try {
                 clientSocket.close();
                 System.out.println("close the socket at the end");
-                //remove the name fro the list
-               /* String removeNameAfterUserClickExit = gui.removeClient.get(out);
-                nameList.remove(removeNameAfterUserClickExit);
-                gui.model.removeElement(removeNameAfterUserClickExit);*/
 
             }
             catch(IOException e){
