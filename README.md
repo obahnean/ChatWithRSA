@@ -17,6 +17,6 @@ b) Client
 
 
 c) Send Message:
-1: if you see unreable messages, please disconnect the server, and reconnect
+1: if you see unreadasble messages, please disconnect the server, and reconnect
 2: you can send messages to yourself
 3: p != q, p and q are different numbers and their product can not be less than ~30000
